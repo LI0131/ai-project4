@@ -1,0 +1,4 @@
+INFO:root:STARTING CNN...
+INFO:root:Pulling data from Keras
+INFO:root:Init Model
+INFO:root:Begin Training
