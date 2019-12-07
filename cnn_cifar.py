@@ -19,7 +19,7 @@ NUM_CLASSES = int(os.environ.get('NUM_CLASSES', 10))
 EPOCHS = int(os.environ.get('EPOCHS', 50))
 
 
-def vae(x_train, y_train, x_test, y_test):
+def vae(x_train_orig, y_train_orig, x_test, y_test):
 
     def sampling(args):
         z_mean, z_log_var = args
@@ -28,9 +28,9 @@ def vae(x_train, y_train, x_test, y_test):
         epsilon = K.random_normal(shape=(batch, dim))
         return z_mean + K.exp(0.5 * z_log_var) * epsilon
 
-    image_size = x_train.shape[1]
+    image_size = x_train_orig.shape[1]
     original_dim = image_size * image_size
-    x_train = np.reshape(x_train, [-1, original_dim])
+    x_train = np.reshape(x_train_orig, [-1, original_dim])
     x_test = np.reshape(x_test, [-1, original_dim])
     x_train = x_train.astype('float32') / 255
     x_test = x_test.astype('float32') / 255
@@ -73,21 +73,29 @@ def vae(x_train, y_train, x_test, y_test):
 
     vae.fit(
         x_train,
-        epochs=1,
+        epochs=100,
         batch_size=128,
         shuffle=True,
         validation_data=(x_test, None),
     )
 
+    predictions = vae.predict(x_train)
+    pred = []
+
+    for i in range(len(predictions)):
+        if i % 3 == 0:
+            r = predictions[i-3].reshape((32, 32, 1))
+            g = predictions[i-2].reshape((32, 32, 1))
+            b = predictions[i-1].reshape((32, 32, 1))
+            pred.append(np.concatenate([r,g,b], axis=2))
+
     x_exp = []
     y_exp = []
-    for i in range(len(x_train)):
-        x_exp.append(vae.predict(
-            tf.reshape(x_train[i], [1024,])
-        ))
-        y_exp.append(y_train[i])
+    for i in range(len(pred)):
+        x_exp.append(pred[i])
+        y_exp.append(y_train_orig[i])
 
-    return x_train.extend(x_exp), y_train.extend(y_exp)
+    return np.concatenate([x_train_orig, x_exp], axis=0), np.concatenate([y_train_orig, y_exp], axis=0)
 
 
 def run():
@@ -96,6 +104,8 @@ def run():
 
     # use a variational autoencoder to increase training set size
     x_train, y_train = vae(x_train, y_train, x_test, y_test)
+
+    print(x_train.shape)
 
     # convert the image pixel values to a range between 0 and NUM_CLASSES for categorical classification
     y_train = keras.utils.to_categorical(y_train, NUM_CLASSES) 
