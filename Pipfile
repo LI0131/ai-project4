@@ -4,16 +4,15 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [scripts]
-cnn = "python3 cnn.py"
+imdb = "python3 cnn.py"
+cifar = "python3 cnn_cifar.py"
 
 [dev-packages]
 
 [packages]
-gensim = "*"
-nltk = "*"
-pandas = "*"
 tensorflow = "*"
 keras = "*"
+tensorflow-probability = "*"
 
 [requires]
 python_version = "3.7"
