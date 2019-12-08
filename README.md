@@ -9,7 +9,7 @@
 Note: You can engage a VAE model for the `cnn_cifar.py` file by using `--vae` or `--vae_by_channel`.
 
 ### 1D-CNN for IMDB dataset
-After implementing the LSTM RNN on the IMDB dataset for sentiment analysis, we only achieved moderately high accuracy. We suspect that the lack of inherent long-range dependencies in sentiment analysis will lend better to the implementation of a 1D covnet CNN. This model will better capture the local dependencies by considering features in smaller chinks, rather than extrapolating dependencies based on non-local tokens.
+After implementing the LSTM RNN on the IMDB dataset for sentiment analysis, we only achieved moderately high accuracy. We suspect that the lack of inherent long-range dependencies in sentiment analysis will lend better to the implementation of a 1D covnet CNN. This model will better capture the local dependencies by considering features in smaller chunks, rather than extrapolating dependencies based on non-local tokens.
 
 #### Dropout
 We used a dropout rate of 20%. Using dropout increases the robustness of the model, forcing it not to rely on one path for a classification, instead allowing for multiple paths to the correct classification. We believe that a rate of 20% is appropriate based on testing with various values for the dropout hyperparameter.
@@ -21,7 +21,7 @@ We chose a vocabulary size of 20,000 in order to fully represent as much of the 
 We chose to use 250 filters. We chose this high number of filters because it will allow us to detect more features within the data. This will be important in understanding the context of the input amongst the values to which it is adjacent, but also to the values that are influential to the current token on broader scale. Ultimately, this should be the advantage of using a 1D-CNN architecture over something like an RNN. We can look at more of the search space when trying to understand the relationship amongst input tokens.
 
 #### Kernel Size
-We chose to use a kernel size of 3. This will allow for the extraction of finer features necessary in sentiment analysis. Essentially, the model will consider words in groups of three when extracting features. *** Maybe add some more to this
+We chose to use a kernel size of 3. This will allow for the extraction of finer features necessary in sentiment analysis. Essentially, the model will consider words in groups of three when extracting features.
 
 #### Batch Size
 We chose a batch size of 64 due to still fast computation speeds, but accurate results. A larger batch size would train faster, but sacrifice accuracy. A smaller batch size will converge more accurately to the local minima, however at higher computational costs. Thus, we chose a batch size that will allow training in a reasonable time, while not sacrificing too much accuracy. 
