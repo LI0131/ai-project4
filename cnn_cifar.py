@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.INFO, filename='info.log')
 
 BATCH_SIZE = int(os.environ.get('BATCH_SIZE', 32))
 NUM_CLASSES = int(os.environ.get('NUM_CLASSES', 10))
-EPOCHS = int(os.environ.get('EPOCHS', 50))
+EPOCHS = int(os.environ.get('EPOCHS', 100))
 
 
 def vae(x_train_orig, y_train_orig, x_test, single_channel=False):
