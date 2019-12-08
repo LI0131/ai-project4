@@ -20,7 +20,7 @@ NUM_CLASSES = int(os.environ.get('NUM_CLASSES', 10))
 EPOCHS = int(os.environ.get('EPOCHS', 50))
 
 
-def vae(x_train_orig, y_train_orig, x_test, y_test):
+def vae(x_train_orig, y_train_orig, x_test, single_channel=False):
 
     def sampling(args):
         z_mean, z_log_var = args
@@ -68,21 +68,23 @@ def vae(x_train_orig, y_train_orig, x_test, y_test):
 
     vae.fit(
         x_train,
-        epochs=100,
+        epochs=50,
         batch_size=128,
         shuffle=True,
         validation_data=(x_test, None),
     )
 
     predictions = vae.predict(x_train)
-    pred = []
 
-    for i in range(len(predictions)):
-        if i % 3 == 0:
-            r = predictions[i-3].reshape((32, 32, 1))
-            g = predictions[i-2].reshape((32, 32, 1))
-            b = predictions[i-1].reshape((32, 32, 1))
-            pred.append(np.concatenate([r,g,b], axis=2))
+    if single_channel:
+        pred = predictions.reshape(50000, 32, 32, 1)
+    else:
+        for i in range(len(predictions)):
+            if i % 3 == 0:
+                r = predictions[i-3].reshape((32, 32, 1))
+                g = predictions[i-2].reshape((32, 32, 1))
+                b = predictions[i-1].reshape((32, 32, 1))
+                pred.append(np.concatenate([r,g,b], axis=2))
 
     x_exp = []
     y_exp = []
@@ -90,6 +92,8 @@ def vae(x_train_orig, y_train_orig, x_test, y_test):
         x_exp.append(pred[i])
         y_exp.append(y_train_orig[i])
 
+    if single_channel:
+        return np.array(x_exp), np.array(y_exp)
     return np.concatenate([x_train_orig, x_exp], axis=0), np.concatenate([y_train_orig, y_exp], axis=0)
 
 
@@ -97,6 +101,8 @@ def run():
     parser = argparse.ArgumentParser()
     help_ = "Use VAE to increase the training set size (default=50,000)"
     parser.add_argument("--vae", help=help_, action='store_true')
+    help_ = "USE VAE to increase training size -- training over each RGB Channel"
+    parser.add_argument("--vae_by_channel", help=help_, action='store_true')
 
     args = parser.parse_args()
 
@@ -105,6 +111,42 @@ def run():
     if args.vae:
         # use a variational autoencoder to increase training set size
         x_train, y_train = vae(x_train, y_train, x_test, y_test)
+
+    if args.vae_by_channel:
+        r = []
+        g = []
+        b = []
+        for image in x_train:
+            img = [[], [], []]
+            for pixels in image:
+                row = [[], [], []]
+                for pixel in pixels:
+                    row[0].append(pixel[0])
+                    row[1].append(pixel[1])
+                    row[2].append(pixel[2])
+                img[0].append(row[0])
+                img[1].append(row[1])
+                img[2].append(row[2])
+            r.append(img[0])
+            g.append(img[1])
+            b.append(img[2])
+ 
+        x = []
+        y = []
+        for channel in [r, g, b]:
+            # use a variational autoencoder to increase training set size
+            x_exp, y_exp = vae(np.array(channel), y_train, x_test, single_channel=True)
+            logging.info(x_exp.shape)
+            x.append(x_exp)
+            y.append(y_exp)
+
+        logging.info(f'Train Shape: {x_train.shape}')
+
+        x_train = np.concatenate([x_train,
+            np.concatenate([x[0], x[1], x[2]], axis=3)
+        ], axis=0)
+
+        y_train = np.concatenate([y_train, y[0]], axis=0)
 
     # convert the image pixel values to a range between 0 and NUM_CLASSES for categorical classification
     y_train = keras.utils.to_categorical(y_train, NUM_CLASSES) 
