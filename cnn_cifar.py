@@ -1,6 +1,7 @@
 import os
 import keras
 import logging
+import argparse
 import numpy as np
 import tensorflow as tf
 from keras import backend as K
@@ -35,29 +36,23 @@ def vae(x_train_orig, y_train_orig, x_test, y_test):
     x_train = x_train.astype('float32') / 255
     x_test = x_test.astype('float32') / 255
 
-    # build encoder model
     inputs = Input(shape=(original_dim, ), name='encoder_input')
     x = Dense(512, activation='relu')(inputs)
     z_mean = Dense(2, name='z_mean')(x)
     z_log_var = Dense(2, name='z_log_var')(x)
 
-    # note that "output_shape" isn't necessary with the TensorFlow backend
     z = Lambda(sampling, output_shape=(2,), name='z')([z_mean, z_log_var])
 
-    # instantiate encoder model
     encoder = Model(inputs, [z_mean, z_log_var, z], name='encoder')
     encoder.summary()
 
-    # build decoder model
     latent_inputs = Input(shape=(2,), name='z_sampling')
     x = Dense(512, activation='relu')(latent_inputs)
     outputs = Dense(original_dim, activation='sigmoid')(x)
 
-    # instantiate decoder model
     decoder = Model(latent_inputs, outputs, name='decoder')
     decoder.summary()
 
-    # instantiate VAE model
     outputs = decoder(encoder(inputs)[2])
     vae = Model(inputs, outputs, name='vae_mlp')
 
@@ -99,13 +94,17 @@ def vae(x_train_orig, y_train_orig, x_test, y_test):
 
 
 def run():
+    parser = argparse.ArgumentParser()
+    help_ = "Use VAE to increase the training set size (default=50,000)"
+    parser.add_argument("--vae", help=help_, action='store_true')
+
+    args = parser.parse_args()
 
     (x_train, y_train), (x_test, y_test) = cifar10.load_data()
 
-    # use a variational autoencoder to increase training set size
-    x_train, y_train = vae(x_train, y_train, x_test, y_test)
-
-    print(x_train.shape)
+    if args.vae:
+        # use a variational autoencoder to increase training set size
+        x_train, y_train = vae(x_train, y_train, x_test, y_test)
 
     # convert the image pixel values to a range between 0 and NUM_CLASSES for categorical classification
     y_train = keras.utils.to_categorical(y_train, NUM_CLASSES) 
