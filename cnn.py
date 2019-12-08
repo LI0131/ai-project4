@@ -33,6 +33,8 @@ def run():
     model.add(tf.keras.layers.GlobalMaxPooling1D())
     model.add(tf.keras.layers.Dense(1, activation='sigmoid'))
 
+    model.summary()
+
     model.compile(
         loss=LOSS_FUNCTION,
         optimizer=OPTIMIZER,
@@ -43,7 +45,7 @@ def run():
     model.fit(
         x_train, y_train,
         batch_size=BATCH_SIZE,
-        epochs=3,
+        epochs=2,
         validation_data=(x_test, y_test)
     )
 
